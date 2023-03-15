@@ -54,16 +54,16 @@ https://iorate.github.io/ublacklist/subscribe?name=Example&url=https%3A%2F%2Fraw
 
 ### Build
 
-To build this extension, [Node.js](https://nodejs.org/en/) and [Yarn](https://yarnpkg.com/) are required.
+To build this extension, [Node.js](https://nodejs.org/en/)>=16 and [Yarn](https://yarnpkg.com/) are required.
 
 ```shell
-git clone https://github.com/iorate/uBlacklist.git
+git clone https://github.com/iorate/ublacklist.git
 
-cd uBlacklist
+cd ublacklist
 
 yarn
 
-# yarn build <browser:=chrome-mv3> <mode:=development> <typecheck:=notypecheck>
+# yarn build <browser:=chrome-mv3> <mode:=development>
 yarn build firefox production
 ```
 

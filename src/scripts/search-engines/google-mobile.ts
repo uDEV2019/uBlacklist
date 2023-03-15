@@ -5,13 +5,17 @@ import { handleSerp, hasDarkBackground, insertElement } from './helpers';
 function getURLFromPing(selector: string): (root: HTMLElement) => string | null {
   return root => {
     const a = selector ? root.querySelector(selector) : root;
-    if (!(a instanceof HTMLAnchorElement) || !a.ping) {
+    if (!(a instanceof HTMLAnchorElement)) {
       return null;
     }
-    try {
-      return new URL(a.ping, window.location.href).searchParams.get('url');
-    } catch {
-      return null;
+    if (a.ping) {
+      try {
+        return new URL(a.ping, window.location.href).searchParams.get('url');
+      } catch {
+        return null;
+      }
+    } else {
+      return a.href;
     }
   };
 }
@@ -117,10 +121,21 @@ const mobileSerpHandlers: Record<string, SerpHandler> = {
       // Regular (iOS)
       {
         target: '.xpd',
-        level: target =>
-          // Web Result with Site Links
-          target.parentElement?.closest<HTMLElement>('.mnr-c.g') ||
-          (target.querySelector('.xpd') ? null : target),
+        level: target => {
+          if (target.querySelector('.kCrYT')) {
+            // Firefox
+            return null;
+          }
+          const webResultWithSiteLinks =
+            target.parentElement?.closest<HTMLElement>('.Ww4FFb.g, .mnr-c.g');
+          if (webResultWithSiteLinks) {
+            return webResultWithSiteLinks;
+          }
+          if (target.querySelector('.xpd')) {
+            return null;
+          }
+          return target;
+        },
         url: getURLFromPing('a'),
         title: '[role="heading"][aria-level="3"]',
         actionTarget: '',

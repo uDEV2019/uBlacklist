@@ -1,12 +1,22 @@
 name: Release to web stores
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      chrome:
+        type: boolean
+        description: Chrome
+        default: true
+      firefox:
+        type: boolean
+        description: Firefox
+        default: true
 
 jobs:
   release:
     name: Release to web stores
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v3
@@ -33,6 +43,8 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
-          FIREFOX_API_KEY: ${{ secrets.FIREFOX_API_KEY }}
-          FIREFOX_SECRET_KEY: ${{ secrets.FIREFOX_SECRET_KEY }}
+          AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
+          AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_CHROME: ${{ inputs.chrome }}
+          RELEASE_FIREFOX: ${{ inputs.firefox }}

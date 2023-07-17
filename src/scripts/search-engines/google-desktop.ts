@@ -105,6 +105,10 @@ const desktopSerpHandlers: Record<string, SerpHandler> = {
       '.FxLDp:has(> .MYVUIe:only-child [data-ub-blocked="hidden"])': {
         display: 'none',
       },
+      // Hide overflowed actions in top stories
+      '.OSrXXb': {
+        whiteSpace: 'nowrap',
+      },
     },
     controlHandlers: [
       {
@@ -184,11 +188,18 @@ const desktopSerpHandlers: Record<string, SerpHandler> = {
       },
       // Latest, Top Story (Horizontal)
       {
-        target: '.JJZKK .kno-fb-ctx, .JJZKK .kno-fb-ctx .ZE0LJd, .JJZKK .kno-fb-ctx .S1FAPd',
+        target: '.IJl0Z',
+        url: 'a',
+        title: '[role="heading"][aria-level="3"]',
+        actionTarget: '.OSrXXb',
+        actionStyle: desktopActionStyle,
+      },
+      {
+        target: '.JJZKK .kno-fb-ctx',
         level: '.JJZKK',
         url: 'a',
         title: '[role="heading"][aria-level="3"]',
-        actionTarget: '.ZE0LJd, .S1FAPd',
+        actionTarget: '.OSrXXb',
         actionStyle: desktopActionStyle,
       },
       // People Also Ask
@@ -225,7 +236,7 @@ const desktopSerpHandlers: Record<string, SerpHandler> = {
       },
       // Top Story (Vertical)
       {
-        target: '.yG4QQe .WlydOe .ZE0LJd, .yG4QQe .WlydOe .S1FAPd',
+        target: '.yG4QQe .WlydOe .OSrXXb',
         level: target => {
           if (target.matches('.JJZKK *')) {
             // Latest, Top story (Horizontal)
@@ -235,8 +246,8 @@ const desktopSerpHandlers: Record<string, SerpHandler> = {
           return target.closest('.WlydOe')!.parentElement;
         },
         url: '.WlydOe',
-        title: '.mCBkyc',
-        actionTarget: '.ZE0LJd, .S1FAPd',
+        title: '[role="heading"][aria-level="3"]',
+        actionTarget: '.OSrXXb',
         actionStyle: actionRoot => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           actionRoot.parentElement!.style.whiteSpace = 'nowrap';
@@ -371,46 +382,32 @@ const desktopSerpHandlers: Record<string, SerpHandler> = {
     ],
     entryHandlers: [
       {
-        target: '.isv-r, .isv-r > .VFACy',
-        level: '.isv-r',
-        url: '.VFACy',
+        target: '.isv-r[role="listitem"]',
+        url: 'a:not([role="button"])',
         title: root => {
-          const a = root.querySelector<HTMLElement>('.VFACy');
+          const a = root.querySelector<HTMLElement>('a:not([role="button"])');
           return a?.title ?? null;
         },
         actionTarget: '',
-        actionStyle: actionRoot => {
-          const style: CSSAttribute = {
-            display: 'block',
-            fontSize: '11px',
-            marginTop: '-8px',
-            position: 'relative',
-          };
-          if (actionRoot.matches('[jsname="BWRNE"] *')) {
-            // Related images
-            style['& > .ub-button'] = {
-              color: 'var(--ub-link-color, #609beb)',
-            };
-          } else {
-            style['[data-ub-blocked="visible"] &'] = {
-              backgroundColor: 'var(--ub-block-color, rgba(255, 192, 192, 0.5))',
-            };
-          }
-          actionRoot.className = css(style);
+        actionStyle: {
+          display: 'block',
+          fontSize: '11px',
         },
-      },
-    ],
-    pagerHandlers: [
-      // Related images
-      {
-        target: '[jsname="BWRNE"]',
-        innerTargets: '.isv-r',
       },
     ],
   }),
   // News
   nws: handleSerp({
-    globalStyle: desktopGlobalStyle,
+    globalStyle: {
+      ...desktopGlobalStyle,
+      '[data-ub-blocked] .kno-fb-ctx, [data-ub-highlight] .kno-fb-ctx': {
+        backgroundColor: 'transparent !important',
+      },
+      // Hide overflowed actions
+      '.OSrXXb': {
+        whiteSpace: 'nowrap',
+      },
+    },
     controlHandlers: [
       {
         target: '#result-stats',
@@ -418,6 +415,13 @@ const desktopSerpHandlers: Record<string, SerpHandler> = {
     ],
     entryHandlers: [
       // Regular
+      {
+        target: '.SoaBEf, .JJZKK',
+        url: 'a',
+        title: '[role="heading"][aria-level="3"]',
+        actionTarget: '.OSrXXb',
+        actionStyle: desktopActionStyle,
+      },
       {
         target: '.WlydOe .ZE0LJd, .WlydOe .S1FAPd',
         level: target => target.closest('.ftSUBd') || target.closest('.WlydOe'),

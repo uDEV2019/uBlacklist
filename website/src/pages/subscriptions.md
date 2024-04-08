@@ -6,17 +6,37 @@ title: Subscriptions
 
 [Add your subscription](https://github.com/iorate/ublacklist/edit/master/website/src/pages/subscriptions.md)
 
+## AI generated content {#ai-generated-content}
+
+- [ublacklist-noai](https://github.com/ite-usagi/ublacklist-noai) by [ite-usagi](https://github.com/ite-usagi)
+  - "uBlacklist subscription to block generative-ai related site"
+- [ublacklist-ai](https://github.com/PrincessAkira/ublacklist-ai) by [Sarah Engel](https://github.com/PrincessAkira)
+  - "Block those pesky AI-Art things on Google Images to make searching for Backgrounds or Images enjoyable again."
+- [ublacklist-anti-ai-art-subscription](https://codeberg.org/ranmaru22/ublacklist-anti-ai-art-subscription) by [Ranmaru22](https://codeberg.org/ranmaru22)
+  - "Aggressive uBlacklist subscription list that attempts to remove GenAI art from image search results."
+
 ## Copycat sites {#copycat-sites}
 
 - [uBlacklist GitHub Translation](https://github.com/arosh/ublacklist-github-translation) by [Sho Iizuka](https://github.com/arosh)
   - "Exclude domains that serve machine-translated pages of READMEs, Issues, Pull requests, etc. on GitHub from Google search."
 - [uBlacklist Stack Overflow Translation](https://github.com/arosh/ublacklist-stackoverflow-translation) by [Sho Iizuka](https://github.com/arosh)
   - "Filter that enables excluding the machine-translated sites of Stack Overflow."
+- [uBlock-Origin-dev-filter](https://github.com/quenhus/uBlock-Origin-dev-filter) by [quenhus](https://github.com/quenhus)
+  - "Filters to block and remove copycat-websites from DuckDuckGo, Google and other search engines. Used to be specific to dev websites like StackOverflow or GitHub, but it currently supports others like Wikipedia."
 
 ## Specific sites {#specific-sites}
 
 - [ublacklist-pinterest](https://github.com/rjaus/ublacklist-pinterest) by [Riley James](https://github.com/rjaus)
   - "ublacklist to block all pinterest websites from google, ddg, bing"
+
+## Spam {#spam}
+
+- [Search Engine Spam Blocklist](https://github.com/no-cmyk/Search-Engine-Spam-Blocklist) by [no-cmyk](https://github.com/no-cmyk)
+  - "Blocklist to filter out spam and junk domains from search engines results"
+- [Super-SEO-Spam-Suppressor](https://github.com/NotaInutilis/Super-SEO-Spam-Suppressor) by [Nota Inutilis](https://github.com/NotaInutilis)
+  - "Domains blocklist of sites abusing SEO tactics to spam web searches with advertisement, empty content (monetized with ads) and malware (looking like ads)."
+- [SpamdexingSites](https://github.com/elliotwutingfeng/SpamdexingSites) by [Wu Tingfeng](https://github.com/elliotwutingfeng)
+  - "URL feed for blocking spamdexing websites."
 
 ## Chinese {#chinese}
 
@@ -28,7 +48,7 @@ title: Subscriptions
   - content-farm.txt
     - "清单中的网站大多为机器人爬虫网络采集而来的内容， 也可能包含一些人工撰写但质量低下的内容。"
   - bad-content.txt
-    - "清单中的网站大多为用户体验极其不友好的网站。 "
+    - "清单中的网站大多为用户体验极其不友好的网站。"
   - not-friendly-captcha.txt
     - "清单中的网站大多为根据 IP 所在国家/地理位置 来屏蔽普通用户的网站且不能认定内容有区域版权限制。"
 - [uBlacklist-Subscription](https://github.com/scyrte/uBlacklist-Subscription) by [Scyrte](https://github.com/scyrte)

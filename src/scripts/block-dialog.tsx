@@ -1,11 +1,15 @@
-import * as mpsl from 'mpsl';
-import * as punycode from 'punycode/';
-import React, { useState } from 'react';
-import icon from '../icons/icon.svg';
-import { ScopedBaseline } from './components/baseline';
-import { Button, LinkButton } from './components/button';
-import { FOCUS_DEFAULT_CLASS, FOCUS_END_CLASS, FOCUS_START_CLASS } from './components/constants';
-import { Details, DetailsBody, DetailsSummary } from './components/details';
+import * as punycode from "punycode/";
+import { useState } from "react";
+import * as tldts from "tldts";
+import icon from "../icons/icon.svg";
+import { ScopedBaseline } from "./components/baseline.tsx";
+import { Button, LinkButton } from "./components/button.tsx";
+import {
+  FOCUS_DEFAULT_CLASS,
+  FOCUS_END_CLASS,
+  FOCUS_START_CLASS,
+} from "./components/constants.ts";
+import { Details, DetailsBody, DetailsSummary } from "./components/details.tsx";
 import {
   Dialog,
   DialogBody,
@@ -13,86 +17,87 @@ import {
   DialogHeader,
   DialogTitle,
   EmbeddedDialog,
-} from './components/dialog';
-import { Icon } from './components/icon';
-import { Input } from './components/input';
-import { ControlLabel, LabelWrapper } from './components/label';
-import { Row, RowItem } from './components/row';
-import { StylesProvider } from './components/styles';
-import { TextArea } from './components/textarea';
-import { ThemeProvider, darkTheme, lightTheme } from './components/theme';
-import { useClassName, usePrevious } from './components/utilities';
-import { InteractiveRuleset } from './interactive-ruleset';
-import { translate } from './locales';
-import { PathDepth } from './path-depth';
-import { DialogTheme } from './types';
-import { makeAltURL } from './utilities';
+} from "./components/dialog.tsx";
+import { Icon } from "./components/icon.tsx";
+import { Input } from "./components/input.tsx";
+import { ControlLabel, LabelWrapper } from "./components/label.tsx";
+import { Row, RowItem } from "./components/row.tsx";
+import { StylesProvider } from "./components/styles.tsx";
+import { TextArea } from "./components/textarea.tsx";
+import { ThemeProvider, darkTheme, lightTheme } from "./components/theme.tsx";
+import { useClassName, usePrevious } from "./components/utilities.ts";
+import type { InteractiveRuleset } from "./interactive-ruleset.ts";
+import { translate } from "./locales.ts";
+import { PathDepth } from "./path-depth.ts";
+import type { LinkProps } from "./ruleset/ruleset.ts";
+import type { DialogTheme } from "./types.ts";
+import { makeAltURL, svgToDataURL } from "./utilities.ts";
 
 type BlockDialogContentProps = {
   blockWholeSite: boolean;
   close: () => void;
   enablePathDepth: boolean;
+  entryProps: LinkProps;
   open: boolean;
   openOptionsPage: () => Promise<void>;
   ruleset: InteractiveRuleset;
-  title: string | null;
-  url: string;
   onBlocked: () => void | Promise<void>;
 };
 
-const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
+const BlockDialogContent: React.FC<BlockDialogContentProps> = ({
   blockWholeSite,
   close,
   enablePathDepth,
+  entryProps,
   open,
   openOptionsPage,
   ruleset,
-  title,
-  url: entryURL,
   onBlocked,
 }) => {
   const [state, setState] = useState({
     disabled: false,
     unblock: false,
-    host: '',
+    host: "",
     detailsOpen: false,
     pathDepth: null as PathDepth | null,
-    depth: '',
-    rulesToAdd: '',
+    depth: "",
+    rulesToAdd: "",
     rulesToAddValid: false,
-    rulesToRemove: '',
+    rulesToRemove: "",
   });
   const prevOpen = usePrevious(open);
   if (open && !prevOpen) {
-    const url = makeAltURL(entryURL);
+    const url = makeAltURL(entryProps.url);
     if (url && /^(https?|ftp)$/.test(url.scheme)) {
-      const patch = ruleset.createPatch({ url, title }, blockWholeSite);
+      const patch = ruleset.createPatch(entryProps, blockWholeSite);
       state.disabled = false;
       state.unblock = patch.unblock;
-      state.host = punycode.toUnicode(blockWholeSite ? mpsl.get(url.host) ?? url.host : url.host);
+      state.host = punycode.toUnicode(
+        blockWholeSite ? (tldts.getDomain(url.host) ?? url.host) : url.host,
+      );
       state.detailsOpen = false;
       state.pathDepth = enablePathDepth ? new PathDepth(url) : null;
-      state.depth = '0';
+      state.depth = "0";
       state.rulesToAdd = patch.rulesToAdd;
       state.rulesToAddValid = true;
       state.rulesToRemove = patch.rulesToRemove;
     } else {
       state.disabled = true;
       state.unblock = false;
-      state.host = entryURL;
+      state.host = entryProps.url;
       state.detailsOpen = false;
       state.pathDepth = null;
-      state.depth = '';
-      state.rulesToAdd = '';
+      state.depth = "";
+      state.rulesToAdd = "";
       state.rulesToAddValid = false;
-      state.rulesToRemove = '';
+      state.rulesToRemove = "";
     }
   }
   const ok = !state.disabled && state.rulesToAddValid;
 
   const hostClass = useClassName(
     () => ({
-      wordBreak: 'break-all',
+      wordBreak: "break-all",
     }),
     [],
   );
@@ -103,10 +108,14 @@ const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
         <DialogTitle id="title">
           <Row>
             <RowItem>
-              <Icon iconSize="24px" url={icon} />
+              <Icon iconSize="24px" url={svgToDataURL(icon)} />
             </RowItem>
             <RowItem expanded>
-              {translate(state.unblock ? 'popup_unblockSiteTitle' : 'popup_blockSiteTitle')}
+              {translate(
+                state.unblock
+                  ? "popup_unblockSiteTitle"
+                  : "popup_blockSiteTitle",
+              )}
             </RowItem>
           </Row>
         </DialogTitle>
@@ -121,27 +130,43 @@ const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
           <RowItem expanded>
             <Details
               open={state.detailsOpen}
-              onToggle={e =>
-                setState(s => ({ ...s, detailsOpen: (e.currentTarget as HTMLDetailsElement).open }))
-              }
+              onToggle={(e) => {
+                const { open } = e.currentTarget;
+                setState((s) => ({
+                  ...s,
+                  detailsOpen: open,
+                }));
+              }}
             >
               <DetailsSummary className={FOCUS_START_CLASS}>
-                {translate('popup_details')}
+                {translate("popup_details")}
               </DetailsSummary>
               <DetailsBody>
                 <Row>
                   <RowItem expanded>
                     <LabelWrapper fullWidth>
-                      <ControlLabel for="url">{translate('popup_pageURLLabel')}</ControlLabel>
+                      <ControlLabel for="url">
+                        {translate("popup_pageURLLabel")}
+                      </ControlLabel>
                     </LabelWrapper>
-                    {open && <TextArea breakAll id="url" readOnly rows={2} value={entryURL} />}
+                    {open && (
+                      <TextArea
+                        breakAll
+                        id="url"
+                        readOnly
+                        rows={2}
+                        value={entryProps.url}
+                      />
+                    )}
                   </RowItem>
                 </Row>
                 {enablePathDepth && (
                   <Row>
                     <RowItem expanded>
                       <LabelWrapper disabled={state.disabled} fullWidth>
-                        <ControlLabel for="depth">{translate('popup_pathDepth')}</ControlLabel>
+                        <ControlLabel for="depth">
+                          {translate("popup_pathDepth")}
+                        </ControlLabel>
                       </LabelWrapper>
                       {open && (
                         <Input
@@ -151,18 +176,23 @@ const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
                           min={0}
                           type="number"
                           value={state.depth}
-                          onChange={e => {
+                          onChange={(e) => {
                             const depth = e.currentTarget.value;
-                            if (!state.pathDepth || !depth || !e.currentTarget.validity.valid) {
-                              setState(s => ({ ...s, depth }));
+                            if (
+                              !state.pathDepth ||
+                              !depth ||
+                              !e.currentTarget.validity.valid
+                            ) {
+                              setState((s) => ({ ...s, depth }));
                               return;
                             }
-                            const rulesToAdd = state.pathDepth.suggestMatchPattern(
-                              Number(depth),
-                              state.unblock,
-                            );
+                            const rulesToAdd =
+                              state.pathDepth.suggestMatchPattern(
+                                Number(depth),
+                                state.unblock,
+                              );
                             const patch = ruleset.modifyPatch({ rulesToAdd });
-                            setState(s => ({
+                            setState((s) => ({
                               ...s,
                               depth,
                               rulesToAdd,
@@ -178,7 +208,7 @@ const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
                   <RowItem expanded>
                     <LabelWrapper fullWidth>
                       <ControlLabel for="pageTitle">
-                        {translate('popup_pageTitleLabel')}
+                        {translate("popup_pageTitleLabel")}
                       </ControlLabel>
                     </LabelWrapper>
                     <TextArea
@@ -186,7 +216,7 @@ const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
                       readOnly
                       rows={2}
                       spellCheck="false"
-                      value={title ?? ''}
+                      value={entryProps.title ?? ""}
                     />
                   </RowItem>
                 </Row>
@@ -194,7 +224,7 @@ const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
                   <RowItem expanded>
                     <LabelWrapper disabled={state.disabled} fullWidth>
                       <ControlLabel for="rulesToAdd">
-                        {translate('popup_addedRulesLabel')}
+                        {translate("popup_addedRulesLabel")}
                       </ControlLabel>
                     </LabelWrapper>
                     {open && (
@@ -205,10 +235,14 @@ const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
                         rows={2}
                         spellCheck="false"
                         value={state.rulesToAdd}
-                        onChange={e => {
+                        onChange={(e) => {
                           const rulesToAdd = e.currentTarget.value;
                           const patch = ruleset.modifyPatch({ rulesToAdd });
-                          setState(s => ({ ...s, rulesToAdd, rulesToAddValid: Boolean(patch) }));
+                          setState((s) => ({
+                            ...s,
+                            rulesToAdd,
+                            rulesToAddValid: Boolean(patch),
+                          }));
                         }}
                       />
                     )}
@@ -218,7 +252,7 @@ const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
                   <RowItem expanded>
                     <LabelWrapper disabled={state.disabled} fullWidth>
                       <ControlLabel for="rulesToRemove">
-                        {translate('popup_removedRulesLabel')}
+                        {translate("popup_removedRulesLabel")}
                       </ControlLabel>
                     </LabelWrapper>
                     {open && (
@@ -241,18 +275,24 @@ const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
       <DialogFooter>
         <Row multiline right>
           <RowItem expanded>
-            <LinkButton onClick={openOptionsPage}>{translate('popup_openOptionsLink')}</LinkButton>
+            <LinkButton onClick={openOptionsPage}>
+              {translate("popup_openOptionsLink")}
+            </LinkButton>
           </RowItem>
           <RowItem>
             <Row>
               <RowItem>
-                <Button className={!ok ? FOCUS_END_CLASS : ''} onClick={close}>
-                  {translate('cancelButton')}
+                <Button className={!ok ? FOCUS_END_CLASS : ""} onClick={close}>
+                  {translate("cancelButton")}
                 </Button>
               </RowItem>
               <RowItem>
                 <Button
-                  className={ok ? `${FOCUS_END_CLASS} ${FOCUS_DEFAULT_CLASS}` : FOCUS_DEFAULT_CLASS}
+                  className={
+                    ok
+                      ? `${FOCUS_END_CLASS} ${FOCUS_DEFAULT_CLASS}`
+                      : FOCUS_DEFAULT_CLASS
+                  }
                   disabled={!ok}
                   primary
                   onClick={async () => {
@@ -261,7 +301,11 @@ const BlockDialogContent: React.VFC<BlockDialogContentProps> = ({
                     close();
                   }}
                 >
-                  {translate(state.unblock ? 'popup_unblockSiteButton' : 'popup_blockSiteButton')}
+                  {translate(
+                    state.unblock
+                      ? "popup_unblockSiteButton"
+                      : "popup_blockSiteButton",
+                  )}
                 </Button>
               </RowItem>
             </Row>
@@ -277,11 +321,20 @@ export type BlockDialogProps = {
   theme: DialogTheme;
 } & BlockDialogContentProps;
 
-export const BlockDialog: React.VFC<BlockDialogProps> = ({ target, theme, ...props }) => (
+export const BlockDialog: React.FC<BlockDialogProps> = ({
+  target,
+  theme,
+  ...props
+}) => (
   <StylesProvider target={target}>
-    <ThemeProvider theme={theme === 'light' ? lightTheme : darkTheme}>
+    <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
       <ScopedBaseline>
-        <Dialog aria-labelledby="title" close={props.close} open={props.open} width="360px">
+        <Dialog
+          aria-labelledby="title"
+          close={props.close}
+          open={props.open}
+          width="360px"
+        >
           <BlockDialogContent {...props} />
         </Dialog>
       </ScopedBaseline>
@@ -289,9 +342,11 @@ export const BlockDialog: React.VFC<BlockDialogProps> = ({ target, theme, ...pro
   </StylesProvider>
 );
 
-export type BlockEmbeddedDialogProps = Omit<BlockDialogContentProps, 'open'>;
+export type BlockEmbeddedDialogProps = Omit<BlockDialogContentProps, "open">;
 
-export const BlockEmbeddedDialog: React.VFC<BlockEmbeddedDialogProps> = props => (
+export const BlockEmbeddedDialog: React.FC<BlockEmbeddedDialogProps> = (
+  props,
+) => (
   <EmbeddedDialog close={props.close} width="360px">
     <BlockDialogContent open={true} {...props} />
   </EmbeddedDialog>

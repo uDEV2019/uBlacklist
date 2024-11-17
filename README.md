@@ -28,11 +28,12 @@ This extension is available in the below search engines.
 | Brave \*3    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | DuckDuckGo   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | Ecosia       | :heavy_check_mark: |                    |                    |                    |
+| Kagi         | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | Qwant        | :heavy_check_mark: | :heavy_check_mark: | \*1                | :heavy_check_mark: |
 | SearX \*2    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | Startpage    | :heavy_check_mark: |                    | :heavy_check_mark: | :heavy_check_mark: |
 | Yahoo! JAPAN | :heavy_check_mark: |                    |                    |                    |
-| Yandex       | :heavy_check_mark: |                    |                    | :heavy_check_mark: |
+| Yandex       | :heavy_check_mark: |                    |                    |                    |
 
 \*1 Only if "Always play videos on Qwant.com" is turned off<br>
 \*2 Only certain public instances are supported. If you want to add support for your own SearX/SearXNG search engine, edit `src/common/search-engines.ts` and build the extension manually<br>
@@ -43,42 +44,51 @@ This extension is available in the below search engines.
 To publish a ruleset as a subscription, place a ruleset file encoded in UTF-8 on a suitable HTTP(S) server, and publish the URL. Here is an example hosted on GitHub:<br>
 https://raw.githubusercontent.com/iorate/ublacklist-example-subscription/master/uBlacklist.txt
 
-In uBlacklist >=6.6.0 for _Chrome_, subscription links are available. To add a subscription with `name` and `url`, the following URL can be used as a shortcut to the options page:
+You can prepend YAML frontmatter to your ruleset. It is recommended that you set the `name` variable.
 
 ```
-https://iorate.github.io/ublacklist/subscribe?name={urlEncode(name)}&url={urlEncode(url)}
+---
+name: Your ruleset name
+---
+*://*.example.com/*
+```
+
+In uBlacklist >=6.6.0 for _Chrome_, subscription links are available. To add a subscription with `url`, the following URL can be used as a shortcut to the options page:
+
+```
+https://iorate.github.io/ublacklist/subscribe?url={urlEncode(url)}
 ```
 
 For the above example:<br>
-https://iorate.github.io/ublacklist/subscribe?name=Example&url=https%3A%2F%2Fraw.githubusercontent.com%2Fiorate%2Fublacklist-example-subscription%2Fmaster%2FuBlacklist.txt
+https://iorate.github.io/ublacklist/subscribe?url=https%3A%2F%2Fraw.githubusercontent.com%2Fiorate%2Fublacklist-example-subscription%2Fmaster%2FuBlacklist.txt
 
 ## For developers
 
 ### Build
 
-To build this extension, [Node.js](https://nodejs.org/en/)>=16 and [Yarn](https://yarnpkg.com/) are required.
+To build this extension, [pnpm](https://pnpm.io/)>=9.7.0 or [corepack](https://github.com/nodejs/corepack) (currently distributed with Node.js) is required.
 
 ```shell
+# If you use corepack
+# corepack enable
+
 git clone https://github.com/iorate/ublacklist.git
 
 cd ublacklist
 
-yarn
+pnpm install
 
-# yarn build <browser:=chrome-mv3> <mode:=development>
-yarn build firefox production
+# Usage: pnpm build [--browser BROWSER] [--version VERSION] [--debug] [--watch]
+pnpm build
 ```
 
-Before opening a pull request, you should make sure that `yarn lint`, `yarn test`, and `yarn build-all` pass.
+Before opening a pull request, you should make sure that `pnpm check` passes.
 
 ```shell
-yarn lint
+pnpm check
+
 # Some lint errors can be fixed automatically
-# yarn fix
-
-yarn test
-
-yarn build-all
+pnpm fix
 ```
 
 **NOTE:** The API keys and secrets for the sync feature are not included in this repository. To develop the sync feature, set your own API keys and secrets in the `.env` file.
@@ -95,7 +105,7 @@ GOOGLE_DRIVE_API_SECRET=...
 To add a locale,
 
 1. Determine an ISO language code such as `en` referring to [kLanguageInfoTable](https://src.chromium.org/viewvc/chrome/trunk/src/third_party/cld/languages/internal/languages.cc).
-1. Copy `src/locales/en.json.ts` to `src/locales/${languageCode}.json.ts` and translate entries.
+1. Copy `src/locales/en/messages.json.ts` to `src/locales/${languageCode}/messages.json.ts` and translate entries.
 1. Open `src/scripts/dayjs-locales.ts` and import the dayjs locale.
 1. To localize description and screenshots on web stores, create `web-store-assets/${languageCode}/` and add files.
    - Screenshot localization is available only on Chrome Web Store.

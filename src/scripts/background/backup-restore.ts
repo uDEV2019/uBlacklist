@@ -1,36 +1,41 @@
-import dayjs from 'dayjs';
-import { SEARCH_ENGINES } from '../../common/search-engines';
-import { browser } from '../browser';
-import { defaultLocalStorageItems, loadFromLocalStorage } from '../local-storage';
-import { Ruleset } from '../ruleset';
-import { LocalStorageItemsBackupRestore, Subscriptions } from '../types';
-import { stringEntries } from '../utilities';
-import { resetAllInRawStorage } from './raw-storage';
-import { updateAll as updateAllSubscriptions } from './subscriptions';
+import dayjs from "dayjs";
+import { SEARCH_ENGINES } from "../../common/search-engines.ts";
+import { browser } from "../browser.ts";
+import {
+  defaultLocalStorageItems,
+  loadFromLocalStorage,
+} from "../local-storage.ts";
+import type {
+  LocalStorageItemsBackupRestore,
+  Subscriptions,
+} from "../types.ts";
+import { stringEntries, toPlainRuleset } from "../utilities.ts";
+import { resetAllInRawStorage } from "./raw-storage.ts";
+import { updateAll as updateAllSubscriptions } from "./subscriptions.ts";
 
 export async function backup(): Promise<LocalStorageItemsBackupRestore> {
   const items = await loadFromLocalStorage([
-    'blacklist',
-    'blockWholeSite',
-    'skipBlockDialog',
-    'hideBlockLinks',
-    'hideControl',
-    'enablePathDepth',
-    'linkColor',
-    'blockColor',
-    'highlightColors',
-    'dialogTheme',
-    'syncBlocklist',
-    'syncGeneral',
-    'syncAppearance',
-    'syncSubscriptions',
-    'syncInterval',
-    'subscriptions',
-    'updateInterval',
+    "blacklist",
+    "blockWholeSite",
+    "skipBlockDialog",
+    "hideBlockLinks",
+    "hideControl",
+    "enablePathDepth",
+    "linkColor",
+    "blockColor",
+    "highlightColors",
+    "dialogTheme",
+    "syncBlocklist",
+    "syncGeneral",
+    "syncAppearance",
+    "syncSubscriptions",
+    "syncInterval",
+    "subscriptions",
+    "updateInterval",
   ]);
   return {
     ...items,
-    subscriptions: Object.values(items.subscriptions).map(s => ({
+    subscriptions: Object.values(items.subscriptions).map((s) => ({
       name: s.name,
       url: s.url,
       enabled: s.enabled ?? true,
@@ -46,7 +51,7 @@ export async function restore(
     const now = dayjs().toISOString();
 
     const blacklist = items.blacklist ?? defaults.blacklist;
-    const compiledRules = Ruleset.compile(blacklist);
+    const ruleset = toPlainRuleset(blacklist);
 
     const subscriptions: Subscriptions = {};
     for (const { name, url, enabled } of items.subscriptions ||
@@ -54,8 +59,8 @@ export async function restore(
       subscriptions[nextSubscriptionId] = {
         name,
         url,
-        blacklist: '',
-        compiledRules: Ruleset.compile(''),
+        ruleset: toPlainRuleset(""),
+        blacklist: "",
         updateResult: false,
         enabled: enabled ?? true,
       };
@@ -63,8 +68,8 @@ export async function restore(
     }
 
     return {
+      ruleset,
       blacklist,
-      compiledRules,
       timestamp: now,
 
       blockWholeSite: items.blockWholeSite ?? defaults.blockWholeSite,
@@ -103,10 +108,11 @@ export async function restore(
 export async function initialize(): Promise<void> {
   await resetAllInRawStorage(() => ({}));
 
-  // #if !SAFARI
-  const matches = stringEntries(SEARCH_ENGINES).flatMap(([id, { contentScripts }]) =>
-    id !== 'google' ? contentScripts.flatMap(({ matches }) => matches) : [],
-  );
-  await browser.permissions.remove({ origins: matches });
-  // #endif
+  if (process.env.BROWSER !== "safari") {
+    const matches = stringEntries(SEARCH_ENGINES).flatMap(
+      ([id, { contentScripts }]) =>
+        id !== "google" ? contentScripts.flatMap(({ matches }) => matches) : [],
+    );
+    await browser.permissions.remove({ origins: matches });
+  }
 }

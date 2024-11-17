@@ -1,37 +1,89 @@
-import { history, historyKeymap, standardKeymap } from '@codemirror/commands';
-import { HighlightStyle, Language, language, syntaxHighlighting } from '@codemirror/language';
-import { Compartment, EditorState, Transaction } from '@codemirror/state';
+import { history, historyKeymap, standardKeymap } from "@codemirror/commands";
+import {
+  HighlightStyle,
+  type LanguageSupport,
+  syntaxHighlighting,
+} from "@codemirror/language";
+import { lintGutter } from "@codemirror/lint";
+import { Compartment, EditorState, Transaction } from "@codemirror/state";
 import {
   EditorView,
   highlightActiveLineGutter,
   highlightSpecialChars,
   keymap,
   lineNumbers,
-} from '@codemirror/view';
-import { tags as t } from '@lezer/highlight';
-import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
-import { FOCUS_END_CLASS, FOCUS_START_CLASS } from './constants';
-import { useTheme } from './theme';
+} from "@codemirror/view";
+import { type Highlighter, tags as t } from "@lezer/highlight";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { FOCUS_END_CLASS, FOCUS_START_CLASS } from "./constants.ts";
+import { useTheme } from "./theme.tsx";
+
+type ColorScheme = {
+  background: string;
+  foreground: string;
+  selectionBackground: string;
+  lineNumberForeground: string;
+  activeLineNumberForeground: string;
+  comment: string;
+  name: string;
+  literal: string;
+  string: string;
+  keyword: string;
+  operator: string;
+  meta: string;
+};
+
+// [jellybeans.vim](https://github.com/nanotech/jellybeans.vim)
+const darkColorScheme: ColorScheme = {
+  background: "#202124",
+  foreground: "#e8e8d3",
+  selectionBackground: "#2e2e2e",
+  lineNumberForeground: "#858585",
+  activeLineNumberForeground: "#fabb6e",
+  comment: "#888888",
+  name: "#fabb6e",
+  literal: "#cf6a4c",
+  string: "#99ad6a",
+  keyword: "#8197bf",
+  operator: "#ffe2a9",
+  meta: "#8fbfdc",
+};
+
+// [hybrid.vim](https://github.com/w0ng/vim-hybrid)
+const lightColorScheme: ColorScheme = {
+  background: "#f8f9fa",
+  foreground: "#000",
+  selectionBackground: "#bcbcbc",
+  lineNumberForeground: "#bcbcbc",
+  activeLineNumberForeground: "#5f5f00",
+  comment: "#5f5f5f",
+  name: "#875f00",
+  literal: "#5f0000",
+  string: "#005f00",
+  keyword: "#00005f",
+  operator: "#8abeb7",
+  meta: "#005f5f",
+};
 
 export type EditorProps = {
   focusStart?: boolean;
   focusEnd?: boolean;
   height?: string;
-  language?: Language;
+  language?: LanguageSupport;
   readOnly?: boolean;
   resizable?: boolean;
   value?: string;
   onChange?: (value: string) => void;
 };
 
-export const Editor: React.VFC<EditorProps> = ({
+export const Editor: React.FC<EditorProps> = ({
   focusStart = false,
   focusEnd = false,
-  height = '200px',
+  height = "200px",
   language: lang,
   readOnly = false,
   resizable = false,
-  value = '',
+  value = "",
   onChange,
 }) => {
   const view = useRef<EditorView | null>(null);
@@ -43,6 +95,7 @@ export const Editor: React.VFC<EditorProps> = ({
   const themeCompartment = useRef(new Compartment());
   const updateListenerCompartment = useRef(new Compartment());
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 'view' and `resizeObserver` do not change between renders
   const parentCallback = useCallback((parent: HTMLDivElement | null) => {
     if (parent) {
       // mount
@@ -52,6 +105,7 @@ export const Editor: React.VFC<EditorProps> = ({
           extensions: [
             keymap.of([...standardKeymap, ...historyKeymap]),
             history(),
+            lintGutter(),
             lineNumbers(),
             highlightActiveLineGutter(),
             highlightSpecialChars(),
@@ -73,7 +127,6 @@ export const Editor: React.VFC<EditorProps> = ({
       resizeObserver.current?.disconnect();
       view.current?.destroy();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useLayoutEffect(() => {
@@ -86,27 +139,21 @@ export const Editor: React.VFC<EditorProps> = ({
 
   const theme = useTheme();
   useLayoutEffect(() => {
+    const colorScheme =
+      theme.name === "dark" ? darkColorScheme : lightColorScheme;
     view.current?.dispatch({
       effects: highlightStyleCompartment.current.reconfigure(
         syntaxHighlighting(
           HighlightStyle.define([
-            {
-              tag: t.annotation,
-              color: theme.editor.annotation,
-            },
-            {
-              tag: t.regexp,
-              color: theme.editor.regexp,
-            },
-            {
-              tag: t.comment,
-              color: theme.editor.comment,
-            },
-            {
-              tag: t.invalid,
-              color: theme.editor.comment,
-            },
-          ]),
+            { tag: t.comment, color: colorScheme.comment },
+            { tag: t.name, color: colorScheme.name },
+            { tag: t.literal, color: colorScheme.literal },
+            { tag: t.string, color: colorScheme.string },
+            { tag: t.regexp, color: colorScheme.string },
+            { tag: t.keyword, color: colorScheme.keyword },
+            { tag: t.operator, color: colorScheme.operator },
+            { tag: t.meta, color: colorScheme.meta },
+          ]) as Highlighter,
         ),
       ),
     });
@@ -114,57 +161,61 @@ export const Editor: React.VFC<EditorProps> = ({
 
   useLayoutEffect(() => {
     view.current?.dispatch({
-      effects: languageCompartment.current.reconfigure(lang ? language.of(lang) : []),
+      effects: languageCompartment.current.reconfigure(lang || []),
     });
   }, [lang]);
 
   useLayoutEffect(() => {
     view.current?.dispatch({
-      effects: readOnlyCompartment.current.reconfigure(EditorState.readOnly.of(readOnly)),
+      effects: readOnlyCompartment.current.reconfigure(
+        EditorState.readOnly.of(readOnly),
+      ),
     });
   }, [readOnly]);
 
   useLayoutEffect(() => {
+    const colorScheme =
+      theme.name === "dark" ? darkColorScheme : lightColorScheme;
     view.current?.dispatch({
       effects: themeCompartment.current.reconfigure(
         EditorView.theme(
           {
-            '&': {
-              backgroundColor: theme.editor.background,
+            "&": {
+              backgroundColor: colorScheme.background,
               border: `1px solid ${theme.editor.border}`,
-              color: theme.editor.text,
+              color: colorScheme.foreground,
               height,
-              overflow: 'hidden',
-              resize: resizable ? 'vertical' : 'none',
+              overflow: "hidden",
+              resize: resizable ? "vertical" : "none",
             },
-            '&.cm-editor.cm-focused': {
+            "&.cm-editor.cm-focused": {
               boxShadow: `0 0 0 2px ${theme.focus.shadow}`,
-              outline: 'none',
+              outline: "none",
             },
-            '.cm-scroller': {
+            ".cm-scroller": {
               fontFamily:
                 'ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace',
-              overflow: 'auto',
+              overflow: "auto",
             },
-            '.cm-gutters': {
-              backgroundColor: theme.editor.background,
-              border: 'none',
-              color: theme.editor.lineNumber,
+            ".cm-gutters": {
+              backgroundColor: "transparent",
+              border: "none",
+              color: colorScheme.lineNumberForeground,
             },
-            '.cm-activeLineGutter': {
-              backgroundColor: 'transparent',
+            ".cm-activeLineGutter": {
+              backgroundColor: "transparent",
             },
-            '&.cm-focused .cm-activeLineGutter': {
-              color: theme.editor.activeLineNumber,
+            "&.cm-focused .cm-activeLineGutter": {
+              color: colorScheme.activeLineNumberForeground,
             },
-            '.cm-lineNumbers .cm-gutterElement': {
-              padding: '0 8px',
+            ".cm-lineNumbers .cm-gutterElement": {
+              padding: "0 8px",
             },
-            '.cm-content ::selection': {
-              backgroundColor: theme.editor.selectionBackground,
+            ".cm-content ::selection": {
+              backgroundColor: colorScheme.selectionBackground,
             },
           },
-          { dark: theme.name === 'dark' },
+          { dark: theme.name === "dark" },
         ),
       ),
     });
@@ -174,11 +225,12 @@ export const Editor: React.VFC<EditorProps> = ({
     view.current?.dispatch({
       effects: updateListenerCompartment.current.reconfigure(
         onChange
-          ? EditorView.updateListener.of(viewUpdate => {
+          ? EditorView.updateListener.of((viewUpdate) => {
               if (
                 viewUpdate.docChanged &&
                 viewUpdate.transactions.some(
-                  transaction => transaction.annotation(Transaction.userEvent) != null,
+                  (transaction) =>
+                    transaction.annotation(Transaction.userEvent) != null,
                 )
               ) {
                 onChange(viewUpdate.state.doc.toString());

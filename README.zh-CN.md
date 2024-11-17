@@ -31,7 +31,7 @@
 | SearX \*3    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | Startpage    | :heavy_check_mark: |                    | :heavy_check_mark: | :heavy_check_mark: |
 | Yahoo! JAPAN | :heavy_check_mark: |                    |                    |                    |
-| Yandex       | :heavy_check_mark: |                    |                    | :heavy_check_mark: |
+| Yandex       | :heavy_check_mark: |                    |                    |                    |
 
 \*1 仅当 "Always play videos on Qwant.com" 关闭时<br>
 \*2 仅支持某些公共实例，如果您想将自己的 SearX/SearXNG 添加到支持列表，你需要前往`src/common/search-engines.ts`，并手动将您的搜索引擎添加到列表中，然后手动进行构建。
@@ -54,29 +54,29 @@ https://iorate.github.io/ublacklist/subscribe?name=Example&url=https%3A%2F%2Fraw
 
 ### 构建
 
-为了构建这个扩展，你需要下载并安装 [Node.js](https://nodejs.org/en/)>=16 和 [Yarn](https://yarnpkg.com/)。
+为了构建这个扩展，你需要下载并安装 [pnpm](https://pnpm.io/)>=9.7.0 or [corepack](https://github.com/nodejs/corepack) (currently distributed with Node.js)。
 
 ```shell
+# If you use corepack
+# corepack enable
+
 git clone https://github.com/iorate/ublacklist.git
 
 cd ublacklist
 
-yarn
+pnpm install
 
-# yarn build <browser:=chrome-mv3> <mode:=development>
-yarn build firefox production
+# Usage: pnpm build [--browser BROWSER] [--version VERSION] [--debug] [--watch]
+pnpm build
 ```
 
-在您提交`Pull Request`之前，您需要确保`yarn lint`、`yarn test`和`yarn build-all`通过测试，否则可能会影响 github actions 自动构建。
+在您提交`Pull Request`之前，您需要确保`pnpm check`通过测试，否则可能会影响 github actions 自动构建。
 
 ```shell
-yarn lint
+pnpm check
+
 # 一些lint错误会被自动修复
-# yarn fix
-
-yarn test
-
-yarn build-all
+pnpm fix
 ```
 
 **注意:** 同步功能的 API Key 和 Secret 不包含在此存储库中。 要开发同步功能，请在 `.env` 文件中设置您自己的 API Key 和 Secret。
@@ -93,7 +93,7 @@ GOOGLE_DRIVE_API_SECRET=...
 添加一个语言,
 
 1. 定义一个 ISO 语言代码，例如`en`指的是 [kLanguageInfoTable](https://src.chromium.org/viewvc/chrome/trunk/src/third_party/cld/languages/internal/languages.cc).
-1. 复制 `src/locales/en.json.ts` 到 `src/locales/${languageCode}.json.ts` 并翻译条目.
+1. 复制 `src/_locales/en/messages.json.ts` 到 `src/_locales/${languageCode}/messages.json.ts` 并翻译条目.
 1. 打开 `src/scripts/dayjs-locales.ts` 并导入 dayjs 语言环境.
 1. 要本地化网上商店的描述和屏幕截图，请创建 `web-store-assets/${languageCode}/` 并添加文件。
    - 屏幕截图本地化仅在 Chrome 网上应用店可用。
